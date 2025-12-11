@@ -27,5 +27,10 @@ namespace ExpenseTrackerApp.Views
             this.DialogResult = true;
             this.Close();
         }
+        private void Cancel_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            this.DialogResult = false;
+            this.Close();
+        }
     }
 }

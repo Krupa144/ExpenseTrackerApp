@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -7,68 +8,61 @@ namespace ExpenseTrackerApp.Services
 {
     public class CurrencyService
     {
-        private decimal _currentRate = 4.3m;
+        private const string ApiUrl = "http://api.nbp.pl/api/exchangerates/tables/a/?format=json";
 
-        private readonly System.Timers.Timer _timer;
-        private readonly string _apiUrl;
+        private Dictionary<string, decimal> _rates = new();
 
-        public decimal CurrentRate => _currentRate;
-        public event Action<decimal>? RateUpdated;
+        public event Action? RatesUpdated;
 
         public CurrencyService()
         {
-            _apiUrl = Environment.GetEnvironmentVariable("CURRENCY_API_URL")
-                      ?? "http://api.nbp.pl/api/exchangerates/rates/a/eur/?format=json";
-
-            _timer = new System.Timers.Timer();
-            _timer.Elapsed += async (s, e) => await FetchRateAsync();
-
-            SetupTimerForNineAM();
-
-            Task.Run(FetchRateAsync);
+            Task.Run(FetchRatesAsync);
         }
 
-        private void SetupTimerForNineAM()
+        public decimal GetRate(string currencyCode)
         {
-            DateTime now = DateTime.Now;
-            DateTime nineAm = now.Date.AddHours(9);
-            if (now > nineAm) nineAm = nineAm.AddDays(1);
-
-            double msUntilNine = (nineAm - now).TotalMilliseconds;
-
-            if (msUntilNine <= 0) msUntilNine = 1000;
-
-            _timer.Interval = msUntilNine;
-            _timer.AutoReset = false;
-            _timer.Start();
+            if (currencyCode == "PLN") return 1.0m;
+            return _rates.ContainsKey(currencyCode) ? _rates[currencyCode] : 1.0m;
         }
 
-        private async Task FetchRateAsync()
+        public IEnumerable<string> GetAvailableCurrencies()
+        {
+            var list = new List<string> { "PLN" }; 
+            list.AddRange(_rates.Keys);
+            return list;
+        }
+
+        private async Task FetchRatesAsync()
         {
             try
             {
                 using var client = new HttpClient();
-                var json = await client.GetStringAsync(_apiUrl);
-                var data = JObject.Parse(json);
+                var json = await client.GetStringAsync(ApiUrl);
+                var array = JArray.Parse(json);
+                var ratesArray = array[0]["rates"] as JArray;
 
-                var rate = data["rates"]?[0]?["mid"]?.Value<decimal>();
-
-                if (rate.HasValue)
+                if (ratesArray != null)
                 {
-                    _currentRate = rate.Value;
-                    RateUpdated?.Invoke(_currentRate);
-                }
+                    foreach (var item in ratesArray)
+                    {
+                        var code = item["code"]?.ToString();
+                        var mid = item["mid"]?.Value<decimal>();
 
-                if (_timer.AutoReset == false)
-                {
-                    _timer.Interval = 24 * 60 * 60 * 1000;
-                    _timer.AutoReset = true;
-                    _timer.Start();
+                        if (!string.IsNullOrEmpty(code) && mid.HasValue)
+                        {
+                            _rates[code] = mid.Value;
+                        }
+                    }
+                    if (!_rates.ContainsKey("USD")) _rates["USD"] = 4.0m;
+                    if (!_rates.ContainsKey("EUR")) _rates["EUR"] = 4.3m;
+
+                    RatesUpdated?.Invoke();
                 }
             }
             catch
             {
-
+                _rates["EUR"] = 4.3m;
+                _rates["USD"] = 3.9m;
             }
         }
     }

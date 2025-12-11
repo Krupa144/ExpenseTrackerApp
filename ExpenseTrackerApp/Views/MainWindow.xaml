@@ -1,35 +1,182 @@
 ﻿<Window x:Class="ExpenseTrackerApp.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Menedżer Wydatków" Height="450" Width="800">
-    <Grid Margin="15">
+        Title="Finanse Osobiste" Height="700" Width="1000" MinWidth="800" MinHeight="600"
+        Background="#F4F5F7">
+    <Window.Resources>
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,15,15"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#DDDDDD" BlurRadius="10" ShadowDepth="2" Opacity="0.5"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="10,15"/>
+            <Setter Property="Foreground" Value="#888888"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="#EEEEEE"/>
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Background="#f0f0f0" Padding="10" CornerRadius="5" Margin="0,0,0,10">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Kurs EUR (NBP): " FontWeight="Bold" FontSize="16"/>
-                <TextBlock Text="{Binding CurrentEurRate, StringFormat=N4}" FontSize="16" Margin="5,0,0,0" Foreground="DarkGreen"/>
-                <TextBlock Text=" PLN" FontSize="16"/>
-            </StackPanel>
-        </Border>
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1.5*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
 
-        <DataGrid Grid.Row="1" ItemsSource="{Binding Expenses}" SelectedItem="{Binding SelectedExpense}" 
-                  AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" HeadersVisibility="Column">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Data" Binding="{Binding Date, StringFormat=dd.MM.yyyy}" Width="100"/>
-                <DataGridTextColumn Header="Tytuł" Binding="{Binding Title}" Width="*"/>
-                <DataGridTextColumn Header="Kwota (PLN)" Binding="{Binding Amount, StringFormat=C2}" Width="120" FontWeight="Bold"/>
-                <DataGridTextColumn Header="Kwota (EUR)" Binding="{Binding AmountInEur, StringFormat=N2}" Width="120"/>
-            </DataGrid.Columns>
-        </DataGrid>
+            <Border Style="{StaticResource CardStyle}" Grid.Column="0" Background="#2B2D42">
+                <StackPanel>
+                    <TextBlock Text="Wydatki w tym miesiącu" Foreground="#AAAAAA" FontSize="14"/>
+                    <TextBlock Text="{Binding CurrentMonthTotal, StringFormat=C2}" Foreground="White" FontSize="36" FontWeight="Bold" Margin="0,5,0,5"/>
+                    <TextBlock Text="{Binding ComparisonText}" Foreground="{Binding ComparisonColor}" FontSize="13" FontWeight="SemiBold"/>
+                </StackPanel>
+            </Border>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
-            <Button Content="+ Dodaj Wydatek" Command="{Binding AddExpenseCommand}" Width="120" Height="35" Margin="0,0,10,0" Background="#007ACC" Foreground="White"/>
-            <Button Content="Usuń Wybrane" Command="{Binding DeleteExpenseCommand}" Width="120" Height="35" Background="#CC3333" Foreground="White"/>
-        </StackPanel>
+            <Border Style="{StaticResource CardStyle}" Grid.Column="1">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Poprzedni miesiąc" Foreground="Gray"/>
+                    <TextBlock Text="{Binding LastMonthTotal, StringFormat=C2}" FontSize="24" FontWeight="Bold" Foreground="#333"/>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardStyle}" Grid.Column="2" Margin="0,0,0,15">
+                <StackPanel VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                        <Border Background="#F7931A" CornerRadius="50" Width="24" Height="24" Margin="0,0,8,0">
+                            <TextBlock Text="₿" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Bitcoin Price" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding BtcPriceInfo}" FontSize="18" FontWeight="Bold"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="1.2*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource CardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <DockPanel LastChildFill="False" Margin="0,0,0,15">
+                        <TextBlock Text="Ostatnie Transakcje" FontSize="18" FontWeight="Bold" DockPanel.Dock="Left" VerticalAlignment="Center"/>
+                        <Button Content="+ Nowy Wydatek" Command="{Binding AddExpenseCommand}" DockPanel.Dock="Right"
+                                Padding="15,8" Background="#4F46E5" Foreground="White" FontWeight="Bold" BorderThickness="0">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="8"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+                    </DockPanel>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Expenses}" SelectedItem="{Binding SelectedExpense}"
+                              AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                              GridLinesVisibility="None" Background="White" RowHeaderWidth="0" BorderThickness="0">
+                        <DataGrid.Columns>
+
+                            <DataGridTemplateColumn Header="KATEGORIA" Width="Auto">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#F3F4F6" CornerRadius="8" Padding="12,6" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,15,0">
+                                            <TextBlock Text="{Binding Category}" FontSize="12" FontWeight="SemiBold" Foreground="#374151" HorizontalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="NAZWA" Binding="{Binding Title}" Width="*" FontWeight="SemiBold"/>
+
+                            <DataGridTextColumn Header="DATA" Binding="{Binding Date, StringFormat=dd.MM}" Width="60" Foreground="Gray"/>
+
+                            <DataGridTemplateColumn Header="WYDANO" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock>
+                                                <Run Text="{Binding OriginalAmount, StringFormat=N2}"/>
+                                                <Run Text="{Binding Currency}" FontWeight="Bold"/>
+                                            </TextBlock>
+                                            <TextBlock FontSize="10" Foreground="Gray">
+                                                <Run Text="Kurs: "/>
+                                                <Run Text="{Binding RateDate, StringFormat=dd.MM}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="PLN" Binding="{Binding AmountInPln, StringFormat=N2}" Width="90" FontWeight="Bold"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Button Grid.Row="2" Content="Usuń zaznaczony" Command="{Binding DeleteExpenseCommand}" 
+                            HorizontalAlignment="Left" Margin="0,10,0,0" Foreground="#D9534F" Background="Transparent" BorderThickness="0"/>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="0,0,0,15">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Wydatki wg Kategorii" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                    <ListBox Grid.Row="1" ItemsSource="{Binding CategoryStats}" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#555"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Total, StringFormat=C0}" FontWeight="Bold" Foreground="#333"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </Window>

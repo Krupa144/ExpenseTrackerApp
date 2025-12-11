@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ExpenseTrackerApp.Models
 {
@@ -12,16 +8,21 @@ namespace ExpenseTrackerApp.Models
         [Key]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Tytuł jest wymagany")]
-        [StringLength(100, ErrorMessage = "Tytuł jest za długi")]
+        [Required]
         public string Title { get; set; } = string.Empty;
 
-        [Range(0.01, double.MaxValue, ErrorMessage = "Kwota musi być większa od 0")]
-        public decimal Amount { get; set; }
+        public string Category { get; set; } = "🛍️ Inne";
+
+        public decimal OriginalAmount { get; set; }
+
+        public string Currency { get; set; } = "PLN";
+
+        public decimal ExchangeRateUsed { get; set; } = 1.0m;
+
+        public DateTime RateDate { get; set; } = DateTime.Now;
+
+        public decimal AmountInPln { get; set; }
 
         public DateTime Date { get; set; } = DateTime.Now;
-
-        public decimal AmountInEur { get; set; }
     }
 }
-

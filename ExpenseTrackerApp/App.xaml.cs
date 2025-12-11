@@ -24,15 +24,13 @@ namespace ExpenseTrackerApp
         private static IServiceProvider ConfigureServices()
         {
             var services = new ServiceCollection();
-
             services.AddDbContext<AppDbContext>();
             services.AddSingleton<CurrencyService>();
             services.AddSingleton<DatabaseService>();
             services.AddSingleton<IDialogService, DialogService>();
-
+            services.AddSingleton<CryptoService>();
             services.AddTransient<MainViewModel>();
             services.AddTransient<ExpenseFormViewModel>();
-
             services.AddTransient<MainWindow>();
 
             return services.BuildServiceProvider();
