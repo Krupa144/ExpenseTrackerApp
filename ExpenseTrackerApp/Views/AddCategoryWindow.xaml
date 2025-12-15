@@ -1,0 +1,33 @@
+﻿<Window x:Class="ExpenseTrackerApp.Views.AddCategoryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nowa Kategoria" Width="350" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Background="Transparent" AllowsTransparency="True" WindowStyle="None">
+
+    <Border Background="#F4F5F7" CornerRadius="12" BorderBrush="#E0E0E0" BorderThickness="1">
+        <StackPanel Margin="20">
+            <TextBlock Text="Nowa Kategoria" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,15"/>
+
+            <TextBlock Text="NAZWA KATEGORII" FontSize="11" FontWeight="SemiBold" Foreground="#888" Margin="0,0,0,5"/>
+            <TextBox Text="{Binding CategoryName, UpdateSourceTrigger=PropertyChanged}" 
+                     Padding="10" Height="40" VerticalContentAlignment="Center" Margin="0,0,0,20">
+                <TextBox.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="6"/>
+                    </Style>
+                </TextBox.Resources>
+            </TextBox>
+
+            <Button Content="DODAJ" Click="Save_Click" Height="40" Background="#4F46E5" Foreground="White" FontWeight="Bold">
+                <Button.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="6"/>
+                    </Style>
+                </Button.Resources>
+            </Button>
+
+            <TextBlock Text="Anuluj" Foreground="#888" HorizontalAlignment="Center" Margin="0,15,0,0" Cursor="Hand" MouseLeftButtonDown="Cancel_Click"/>
+        </StackPanel>
+    </Border>
+</Window>

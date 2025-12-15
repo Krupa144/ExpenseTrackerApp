@@ -7,9 +7,10 @@ namespace ExpenseTrackerApp.Services
 {
     public class CryptoService
     {
-        private const string ApiUrl = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=pln";
+        private const string ApiUrl ="https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=eur";
 
-        public async Task<decimal> GetBtcPriceInPlnAsync()
+
+        public async Task<decimal> GetBtcPriceInEurAsync()
         {
             try
             {
@@ -19,7 +20,7 @@ namespace ExpenseTrackerApp.Services
                 var json = await client.GetStringAsync(ApiUrl);
                 var data = JObject.Parse(json);
 
-                var price = data["bitcoin"]?["pln"]?.Value<decimal>();
+                var price = data["bitcoin"]?["eur"]?.Value<decimal>();
 
                 return price ?? 0;
             }
@@ -28,5 +29,6 @@ namespace ExpenseTrackerApp.Services
                 return 0;
             }
         }
+
     }
 }

@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Finanse Osobiste" Height="700" Width="1000" MinWidth="800" MinHeight="600"
         Background="#F4F5F7">
+
     <Window.Resources>
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="White"/>
@@ -56,29 +57,44 @@
             <Border Style="{StaticResource CardStyle}" Grid.Column="0" Background="#2B2D42">
                 <StackPanel>
                     <TextBlock Text="Wydatki w tym miesiącu" Foreground="#AAAAAA" FontSize="14"/>
-                    <TextBlock Text="{Binding CurrentMonthTotal, StringFormat=C2}" Foreground="White" FontSize="36" FontWeight="Bold" Margin="0,5,0,5"/>
+                    <TextBlock Foreground="White" FontSize="36" FontWeight="Bold" Margin="0,5,0,5">
+                    <Run Text="{Binding CurrentMonthTotal, StringFormat=N2}"/>
+                    <Run Text=" PLN" FontSize="18"/>
+                    </TextBlock>
                     <TextBlock Text="{Binding ComparisonText}" Foreground="{Binding ComparisonColor}" FontSize="13" FontWeight="SemiBold"/>
                 </StackPanel>
             </Border>
-
             <Border Style="{StaticResource CardStyle}" Grid.Column="1">
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Poprzedni miesiąc" Foreground="Gray"/>
-                    <TextBlock Text="{Binding LastMonthTotal, StringFormat=C2}" FontSize="24" FontWeight="Bold" Foreground="#333"/>
+
+                    <TextBlock FontSize="24" FontWeight="Bold" Foreground="#333">
+            <Run Text="{Binding LastMonthTotal, StringFormat=N2}"/>
+            <Run Text=" PLN"/>
+                    </TextBlock>
                 </StackPanel>
             </Border>
+
 
             <Border Style="{StaticResource CardStyle}" Grid.Column="2" Margin="0,0,0,15">
                 <StackPanel VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                         <Border Background="#F7931A" CornerRadius="50" Width="24" Height="24" Margin="0,0,8,0">
-                            <TextBlock Text="₿" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="₿"
+                           Foreground="White"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontWeight="Bold"/>
                         </Border>
-                        <TextBlock Text="Bitcoin Price" FontWeight="SemiBold"/>
+                        <TextBlock Text="Bitcoin (EUR)" FontWeight="SemiBold"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding BtcPriceInfo}" FontSize="18" FontWeight="Bold"/>
+
+                    <TextBlock FontSize="18" FontWeight="Bold">
+            <Run Text="{Binding BtcPriceInfo}"/>
+                    </TextBlock>
                 </StackPanel>
             </Border>
+
         </Grid>
 
         <Grid Grid.Row="1">
@@ -98,7 +114,7 @@
                     <DockPanel LastChildFill="False" Margin="0,0,0,15">
                         <TextBlock Text="Ostatnie Transakcje" FontSize="18" FontWeight="Bold" DockPanel.Dock="Left" VerticalAlignment="Center"/>
                         <Button Content="+ Nowy Wydatek" Command="{Binding AddExpenseCommand}" DockPanel.Dock="Right"
-                                Padding="15,8" Background="#4F46E5" Foreground="White" FontWeight="Bold" BorderThickness="0">
+                                Padding="15,8" Background="#4F46E5" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
                             <Button.Resources>
                                 <Style TargetType="Border">
                                     <Setter Property="CornerRadius" Value="8"/>
@@ -111,7 +127,6 @@
                               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                               GridLinesVisibility="None" Background="White" RowHeaderWidth="0" BorderThickness="0">
                         <DataGrid.Columns>
-
                             <DataGridTemplateColumn Header="KATEGORIA" Width="Auto">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -123,7 +138,6 @@
                             </DataGridTemplateColumn>
 
                             <DataGridTextColumn Header="NAZWA" Binding="{Binding Title}" Width="*" FontWeight="SemiBold"/>
-
                             <DataGridTextColumn Header="DATA" Binding="{Binding Date, StringFormat=dd.MM}" Width="60" Foreground="Gray"/>
 
                             <DataGridTemplateColumn Header="WYDANO" Width="110">
@@ -147,8 +161,8 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <Button Grid.Row="2" Content="Usuń zaznaczony" Command="{Binding DeleteExpenseCommand}" 
-                            HorizontalAlignment="Left" Margin="0,10,0,0" Foreground="#D9534F" Background="Transparent" BorderThickness="0"/>
+                    <Button Grid.Row="2" Content="Usuń zaznaczony wydatek" Command="{Binding DeleteExpenseCommand}" 
+                            HorizontalAlignment="Left" Margin="0,10,0,0" Foreground="#D9534F" Background="Transparent" BorderThickness="0" Cursor="Hand"/>
                 </Grid>
             </Border>
 
@@ -159,7 +173,29 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Text="Wydatki wg Kategorii" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+                    <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                        <TextBlock Text="Wydatki wg Kategorii" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                        <Button Content="+ Dodaj Kategorię" Command="{Binding AddCategoryCommand}"
+                                Background="#4F46E5" Foreground="White" FontWeight="SemiBold" 
+                                BorderThickness="0" Padding="8" Margin="0,0,0,5" Cursor="Hand">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="6"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+
+                        <Button Content="Zarządzaj Kategoriami" Command="{Binding OpenCategoryManagerCommand}"
+                                Background="Transparent" Foreground="#4F46E5" FontWeight="SemiBold" 
+                                BorderThickness="1" BorderBrush="#4F46E5" Padding="8" Cursor="Hand">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="6"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+                    </StackPanel>
 
                     <ListBox Grid.Row="1" ItemsSource="{Binding CategoryStats}" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemTemplate>
@@ -169,8 +205,8 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#555"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding Total, StringFormat=C0}" FontWeight="Bold" Foreground="#333"/>
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#555" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Total, StringFormat=C0}" FontWeight="Bold" Foreground="#333" VerticalAlignment="Center"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

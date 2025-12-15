@@ -16,7 +16,8 @@ namespace ExpenseTrackerApp.Services
             _context.Database.EnsureCreated();
         }
 
-        public async Task<List<Expense>> GetAllAsync() => await _context.Expenses.ToListAsync();
+        public async Task<List<Expense>> GetAllAsync() =>
+            await _context.Expenses.ToListAsync();
 
         public async Task AddAsync(Expense expense)
         {
@@ -28,6 +29,24 @@ namespace ExpenseTrackerApp.Services
         {
             _context.Expenses.Remove(expense);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<Category>> GetCategoriesAsync() =>
+            await _context.Categories.ToListAsync();
+
+        public async Task AddCategoryAsync(Category category)
+        {
+            _context.Categories.Add(category);
+            await _context.SaveChangesAsync();
+        }
+        public async Task DeleteCategoryByNameAsync(string name)
+        {
+            var category = await _context.Categories.FirstOrDefaultAsync(c => c.Name == name);
+            if (category != null)
+            {
+                _context.Categories.Remove(category);
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }

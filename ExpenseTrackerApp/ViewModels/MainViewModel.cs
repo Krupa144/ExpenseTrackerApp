@@ -22,10 +22,9 @@ namespace ExpenseTrackerApp.ViewModels
         [ObservableProperty] private decimal currentMonthTotal;
         [ObservableProperty] private decimal lastMonthTotal;
         [ObservableProperty] private string comparisonText = "Brak danych";
-        [ObservableProperty] private string comparisonColor = "Gray"; 
+        [ObservableProperty] private string comparisonColor = "#888888";
 
-        public ObservableCollection<CategorySummary> CategoryStats { get; } = new();
-
+        public ObservableCollection<Category> CategoryStats { get; } = new();
         public ObservableCollection<Expense> Expenses { get; } = new();
 
         public MainViewModel(DatabaseService db, CurrencyService curr, CryptoService crypto, IDialogService dialog)
@@ -35,84 +34,53 @@ namespace ExpenseTrackerApp.ViewModels
             _cryptoService = crypto;
             _dialogService = dialog;
 
-            Task.Run(LoadApiData);
-            LoadDataCommand.Execute(null);
+            _ = LoadInitialData();
         }
 
-        private async Task LoadApiData()
+        private async Task LoadInitialData()
         {
-            var btc = await _cryptoService.GetBtcPriceInPlnAsync();
-            BtcPriceInfo = btc > 0 ? $"{btc:N0} PLN" : "Błąd";
+            await LoadData();
+            await LoadBtcPrice();
         }
 
-        private void CalculateStatistics()
+        [RelayCommand]
+        private void OpenCategoryManager()
         {
-            var now = DateTime.Now;
-            var currentMonth = now.Month;
-            var currentYear = now.Year;
+            var vm = new CategoryListViewModel(_dbService);
 
-            var prevMonthDate = now.AddMonths(-1);
-            var prevMonth = prevMonthDate.Month;
-            var prevYear = prevMonthDate.Year;
+            _dialogService.ShowCategoryList(vm);
 
-            CurrentMonthTotal = Expenses
-                .Where(e => e.Date.Month == currentMonth && e.Date.Year == currentYear)
-                .Sum(e => e.AmountInPln);
-
-            LastMonthTotal = Expenses
-                .Where(e => e.Date.Month == prevMonth && e.Date.Year == prevYear)
-                .Sum(e => e.AmountInPln);
-
-            decimal diff = CurrentMonthTotal - LastMonthTotal;
-            if (LastMonthTotal == 0)
-            {
-                ComparisonText = "Brak danych z poprzedniego miesiąca";
-                ComparisonColor = "Gray";
-            }
-            else
-            {
-                decimal percent = (diff / LastMonthTotal) * 100;
-                if (diff > 0)
-                {
-                    ComparisonText = $"⬆ Wydajesz o {Math.Abs(percent):N1}% więcej niż miesiąc temu";
-                    ComparisonColor = "#D9534F"; 
-                }
-                else
-                {
-                    ComparisonText = $"⬇ Oszczędziłeś {Math.Abs(percent):N1}% względem poprzedniego miesiąca";
-                    ComparisonColor = "#5CB85C"; 
-                }
-            }
-
-            var stats = Expenses
-                .GroupBy(e => e.Category)
-                .Select(g => new CategorySummary { Name = g.Key, Total = g.Sum(e => e.AmountInPln) })
-                .OrderByDescending(x => x.Total)
-                .ToList();
-
-            CategoryStats.Clear();
-            foreach (var s in stats) CategoryStats.Add(s);
+            CalculateStatistics();
         }
 
         [RelayCommand]
         private async Task LoadData()
         {
-            Expenses.Clear();
             var list = await _dbService.GetAllAsync();
-            foreach (var item in list.OrderByDescending(x => x.Date)) Expenses.Add(item);
+            Expenses.Clear();
+            foreach (var item in list.OrderByDescending(x => x.Date))
+                Expenses.Add(item);
+
             CalculateStatistics();
         }
 
         [RelayCommand]
         private async Task AddExpense()
         {
-            var formVm = new ExpenseFormViewModel(_currencyService);
+            var formVm = new ExpenseFormViewModel(_currencyService, _dbService);
             if (_dialogService.ShowExpenseDialog(formVm))
             {
-                var newExpense = formVm.GetExpense();
-                await _dbService.AddAsync(newExpense);
-                Expenses.Insert(0, newExpense); 
-                CalculateStatistics();
+                try
+                {
+                    var newExpense = formVm.GetExpense();
+                    await _dbService.AddAsync(newExpense);
+                    Expenses.Insert(0, newExpense);
+                    CalculateStatistics();
+                }
+                catch (Exception ex)
+                {
+                    _dialogService.ShowMessage(ex.Message, "Błąd");
+                }
             }
         }
 
@@ -124,10 +92,100 @@ namespace ExpenseTrackerApp.ViewModels
             Expenses.Remove(SelectedExpense);
             CalculateStatistics();
         }
-    }
-    public class CategorySummary
-    {
-        public string Name { get; set; } = "";
-        public decimal Total { get; set; }
+
+        [RelayCommand]
+        private async Task AddCategory()
+        {
+            var vm = new AddCategoryViewModel();
+            if (_dialogService.ShowCategoryDialog(vm))
+            {
+                var newCat = new Category { Name = vm.CategoryName };
+                await _dbService.AddCategoryAsync(newCat);
+                CalculateStatistics(); 
+                _dialogService.ShowMessage($"Dodano nową kategorię: {vm.CategoryName}", "Sukces");
+            }
+        }
+
+        [RelayCommand]
+        private async Task DeleteCategory(Category category)
+        {
+            if (category == null || category.Name == "Inne") return;
+
+            var result = MessageBox.Show($"Czy usunąć kategorię '{category.Name}'?", "Potwierdzenie", MessageBoxButton.YesNo);
+            if (result == MessageBoxResult.Yes)
+            {
+                await _dbService.DeleteCategoryByNameAsync(category.Name);
+                CalculateStatistics();
+            }
+        }
+
+
+        private async Task LoadBtcPrice()
+        {
+            try
+            {
+                var btc = await _cryptoService.GetBtcPriceInEurAsync();
+                BtcPriceInfo = btc > 0 ? $"{btc:N0} €" : "Błąd API";
+
+            }
+            catch { BtcPriceInfo = "Błąd połączenia"; }
+        }
+
+        private void CalculateStatistics()
+        {
+            var now = DateTime.Now;
+
+            CurrentMonthTotal = Expenses
+                .Where(e => e.Date.Month == now.Month && e.Date.Year == now.Year)
+                .Sum(e => e.AmountInPln);
+
+            var lastMonthDate = now.AddMonths(-1);
+            LastMonthTotal = Expenses
+                .Where(e => e.Date.Month == lastMonthDate.Month && e.Date.Year == lastMonthDate.Year)
+                .Sum(e => e.AmountInPln);
+
+            UpdateComparison();
+            UpdateCategorySummary();
+        }
+
+        private void UpdateComparison()
+        {
+            if (LastMonthTotal <= 0)
+            {
+                ComparisonText = "Brak danych z zeszłego miesiąca";
+                ComparisonColor = "#888888";
+                return;
+            }
+
+            decimal diff = CurrentMonthTotal - LastMonthTotal;
+            decimal percent = (diff / LastMonthTotal) * 100;
+
+            if (diff > 0)
+            {
+                ComparisonText = $"⬆ o {percent:N1}% więcej niż miesiąc temu";
+                ComparisonColor = "#D9534F";
+            }
+            else
+            {
+                ComparisonText = $"⬇ o {Math.Abs(percent):N1}% mniej niż miesiąc temu";
+                ComparisonColor = "#5CB85C";
+            }
+        }
+
+        private void UpdateCategorySummary()
+        {
+            var stats = Expenses
+                .GroupBy(e => e.Category)
+                .Select(g => new Category
+                {
+                    Name = g.Key,
+                    Total = g.Sum(e => e.AmountInPln)
+                })
+                .OrderByDescending(x => x.Total)
+                .ToList();
+
+            CategoryStats.Clear();
+            foreach (var s in stats) CategoryStats.Add(s);
+        }
     }
 }

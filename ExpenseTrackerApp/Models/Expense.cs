@@ -5,24 +5,24 @@ namespace ExpenseTrackerApp.Models
 {
     public class Expense
     {
-        [Key]
+        [Key] 
         public int Id { get; set; }
 
-        [Required]
+        [Required] 
         public string Title { get; set; } = string.Empty;
 
-        public string Category { get; set; } = "🛍️ Inne";
+        public string Category { get; set; } = string.Empty;
 
         public decimal OriginalAmount { get; set; }
 
         public string Currency { get; set; } = "PLN";
 
-        public decimal ExchangeRateUsed { get; set; } = 1.0m;
-
-        public DateTime RateDate { get; set; } = DateTime.Now;
-
         public decimal AmountInPln { get; set; }
 
-        public DateTime Date { get; set; } = DateTime.Now;
+        public decimal ExchangeRateUsed { get; set; }
+
+        public DateTime RateDate { get; set; }
+
+        public DateTime Date { get; set; }
     }
 }
